@@ -118,4 +118,6 @@ CREATE TABLE `pushnotification` (
   ],
   "sentAll": true
 }
-```  
+```
+>## Client Side
+- Setup URL_API at File `push-notifications-controller.js`   Line 3   `let url = "https://localhost:7290/";`
