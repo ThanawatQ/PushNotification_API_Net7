@@ -10,7 +10,7 @@ namespace Push_Service.Model
     public class PushSubscriptVM
     {
         public PushSubscription subscription { get; set; }
-        public string Role { get; set; }
+        public string Group { get; set; }
         public string UserId { get; set; }  
     }
 }

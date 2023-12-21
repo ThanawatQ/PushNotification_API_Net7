@@ -68,7 +68,7 @@ namespace Push_Service.Services
                     foreach (var group in message.Groups)
                     {
                         var newData = await _context.Pushnotifications
-                        .Where(w => w.IsDelete != true && w.Role == group)
+                        .Where(w => w.IsDelete != true && w.Group == group)
                         .ToListAsync();
 
                         data.AddRange(newData);

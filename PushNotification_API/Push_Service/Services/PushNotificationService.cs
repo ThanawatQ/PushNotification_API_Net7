@@ -43,7 +43,7 @@ namespace Push_Service.Services
                 {
                     Pushnotification obj = new Pushnotification
                     {
-                        Role = subscription.Role,
+                        Group = subscription.Group,
                         UserId = subscription.UserId,
                         EndPoint = subscription.subscription.Endpoint,
                         P256dh = P256dh,

@@ -35,7 +35,7 @@ public partial class SubcriptionContext : DbContext
             entity.Property(e => e.P256dh)
                 .HasMaxLength(200)
                 .HasColumnName("P256DH");
-            entity.Property(e => e.Role).HasMaxLength(45);
+            entity.Property(e => e.Group).HasMaxLength(45);
             entity.Property(e => e.UserId).HasMaxLength(45);
             entity.Property(e => e.IsDelete);
         });

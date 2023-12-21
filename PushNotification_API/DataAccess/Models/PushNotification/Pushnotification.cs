@@ -15,7 +15,7 @@ public partial class Pushnotification
 
     public string? UserId { get; set; }
 
-    public string? Role { get; set; }
+    public string? Group { get; set; }
 
     public bool? IsDelete { get; set; }
 }
