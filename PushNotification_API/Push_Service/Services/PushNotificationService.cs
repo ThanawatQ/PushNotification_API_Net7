@@ -79,7 +79,7 @@ namespace Push_Service.Services
                 throw;
             }
 
-
+            
         }
 
         public async Task SentLogger(Pushnotification data, string datalog)
@@ -110,7 +110,7 @@ namespace Push_Service.Services
             {
                 var data = await _context.Logs
                     .Include(e => e.Sub).Where(w => w.Sub.IsDelete != true)
-                    .Where(w => w.Status == "Sent" || w.Status == "Received" && w.LogId.ToString() == obj.UserId)
+                    .Where(w => w.Status == "Sent" || w.Status == "Received" || w.Status == "TimeOut" && w.LogId.ToString() == obj.UserId)
                     .ToListAsync();
 
                 if (data.Count > 0 && data != null)

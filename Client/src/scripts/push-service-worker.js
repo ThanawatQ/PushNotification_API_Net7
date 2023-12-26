@@ -3,13 +3,14 @@ self.importScripts(
   "https://cdn.jsdelivr.net/npm/idb@4.0.5/build/iife/with-async-ittr-min.js"
 );
 
-let PustEnable = true;
+let pustEnable = true;
 let preSerintercal = 0;
 let timemer;
+
 self.addEventListener("push", function (event) {
   let jsonObject = JSON.parse(event.data.text());
 
-  if (PustEnable == true) {
+  if (pustEnable == true) {
     event.waitUntil(
       self.registration.showNotification(jsonObject.Title, {
         requireInteraction: true,
@@ -30,7 +31,7 @@ self.addEventListener("push", function (event) {
         Logger(data);
 
         //--------- Check timeOut 
-        CheckAction(jsonObject.UserId)
+        CheckAction(jsonObject.UserId,15)
   }
 });
 
@@ -79,10 +80,18 @@ self.addEventListener("pushsubscriptionchange", function (event) {
 });
 
 
-self.addEventListener("notificationclose", (event) => {
-  console.log("this clear Notification Event ");
-
-});
+// self.addEventListener("notificationclose", (event) => {
+//   console.log("this clear Notification Event ");
+//         //---------- logger
+//         let data = {
+//           Url: "",
+//           UserId: preUserId,
+//           Response: "",
+//           ActionType: "",
+//           Status: "TimeOut",
+//         };
+//         Logger(data);
+// });
 
 
 self.addEventListener("notificationclick", function (event) {
@@ -150,12 +159,12 @@ function Logger(obj) {
   });
 }
 
-function CheckAction(UserId){
+function CheckAction(UserId,Sec){
   preSerintercal = 0;
 
    timemer = setInterval(()=>{
    preSerintercal++;
-   if(preSerintercal == 10){
+   if(preSerintercal == Sec){
        //---------- logger
        let data = {
         Url: "",
@@ -167,6 +176,6 @@ function CheckAction(UserId){
       Logger(data);
       clearInterval(timemer);
    }
-   console.log("Time...!")
+   console.log("Time...!",preSerintercal)
   },1000)
 }
