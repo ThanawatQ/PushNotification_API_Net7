@@ -3,6 +3,7 @@ using Lib.Net.Http.WebPush;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Push_Service.Interface;
 using Push_Service.Model;
@@ -28,11 +29,14 @@ namespace Push_Service.Services
         private readonly IConfiguration _configuration;
         private readonly SubcriptionContext _context;
         private readonly IPushNotificationService _service;
+
+
         public PushNotificationQueue(SubcriptionContext context, IConfiguration configuration)
         {
             _configuration = configuration;
             _pushinitial = new Pushinitialize(_configuration);
             _context = context;
+            _service = new PushNotificationService(_context);
         }
         public async Task SentNotification(SentNotificationVM message)
         {
@@ -43,19 +47,6 @@ namespace Push_Service.Services
                     throw new ArgumentNullException();
                 }
 
-                await ProcessMessageAsync(message);
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        private async Task ProcessMessageAsync(SentNotificationVM message)
-        {
-            try
-            {
                 List<Pushnotification> data = new List<Pushnotification>();
                 if (message.SentAll == true)
                 {
@@ -87,9 +78,8 @@ namespace Push_Service.Services
                 }
 
 
-                var dataMessage = JsonConvert.SerializeObject(message.Content);
                 var vapidDetails = await _pushinitial.GetPushSubscript();
-                await SendNotificationsAsync(data, dataMessage, vapidDetails);
+                await SendNotificationsAsync(data, message, vapidDetails);
             }
             catch (Exception)
             {
@@ -98,25 +88,31 @@ namespace Push_Service.Services
 
         }
 
-        private async Task SendNotificationsAsync(IEnumerable<Pushnotification> data, string messageContent, VapidDetails vapidDetails)
+        private async Task SendNotificationsAsync(IEnumerable<Pushnotification> data, SentNotificationVM messageContent, VapidDetails vapidDetails)
         {
-
             var tasks = data.Select(async item =>
             {
                 try
                 {
+                    string logId = Guid.NewGuid().ToString();
+
+                    messageContent.Content.UserId = logId;
+                    var dataMessage = JsonConvert.SerializeObject(messageContent.Content);
+
                     var pushSubscription = new WebPush.PushSubscription(item.EndPoint, item.P256dh, item.Auth);
                     var webPush = new WebPushClient();
-                    await webPush.SendNotificationAsync(pushSubscription, messageContent, vapidDetails);
+                    await webPush.SendNotificationAsync(pushSubscription, dataMessage, vapidDetails);
+
+                    await _service.SentLogger(item, dataMessage);
+
                 }
                 catch (Exception ex)
                 {
                     WebPushException webPushException = ex as WebPushException;
 
-
                     if ((webPushException.StatusCode == HttpStatusCode.NotFound) || (webPushException.StatusCode == HttpStatusCode.Gone))
                     {
-                        await RemoveEndPoint(item.EndPoint);
+                        await _service.DiscardSubscription(item.EndPoint);
                     }
 
                 }
@@ -124,13 +120,7 @@ namespace Push_Service.Services
             });
             await Task.WhenAll(tasks);
         }
-        private async Task RemoveEndPoint(string EndPoint)
-        {
 
-            var data = await _context.Pushnotifications.FirstOrDefaultAsync(e => e.EndPoint == EndPoint);
-            _context.Pushnotifications.Remove(data);
 
-            await _context.SaveChangesAsync();
-        }
     }
 }

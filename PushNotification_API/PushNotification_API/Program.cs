@@ -25,6 +25,7 @@ builder.Services.AddDbContext<SubcriptionContext>(options =>
 DbContextOptionsBuilder<SubcriptionContext> options_sub = new();
 options_sub = options_sub.UseMySql(connString, ServerVersion.AutoDetect(connString));
 SubcriptionContext _context = new(options_sub.Options);
+
 //---------------------- add PushNotification Service
 builder.Services.AddSingleton<IPushinitialize>(new Pushinitialize(configuration));
 builder.Services.AddSingleton<IPushNotificationQueue>(new PushNotificationQueue(_context, configuration));

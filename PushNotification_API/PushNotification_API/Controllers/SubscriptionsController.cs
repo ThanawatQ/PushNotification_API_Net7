@@ -1,4 +1,5 @@
 ﻿using DataAccess.Models.PushNotification;
+using Lib.Net.Http.WebPush;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ namespace PushNotification_API.Controllers
             _context = context;
             _configuration = configuration;
             _pushInital = pushinitialize;
-            _pushService = new PushNotificationService(_context, _queue);
+            _pushService = new PushNotificationService(_context);
         }
 
         [HttpGet("public-key")]
@@ -79,9 +80,24 @@ namespace PushNotification_API.Controllers
         [HttpDelete("subscriptions")]
         public async Task<IActionResult> DiscardSubscription(string endpoint)
         {
-            await _pushService.DiscardSubscriptionAsync(endpoint);
+            await _pushService.DiscardSubscription(endpoint);
 
             return NoContent();
+        }
+
+        [HttpPost("push-action")]
+        public async Task<IActionResult> pushAction([FromBody] PushActionVM action)
+        {
+            try
+            {
+                await _pushService.UpdateLogger(action);
+                return NoContent();
+            }
+            catch (Exception)
+            {
+
+                return BadRequest();
+            }
         }
     }
 }

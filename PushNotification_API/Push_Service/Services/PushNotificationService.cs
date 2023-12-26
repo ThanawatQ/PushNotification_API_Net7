@@ -1,8 +1,10 @@
 ﻿using DataAccess.Models.PushNotification;
 using Lib.Net.Http.WebPush;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Push_Service.Interface;
@@ -21,10 +23,9 @@ namespace Push_Service.Services
     {
         private readonly SubcriptionContext _context;
         private readonly IPushNotificationQueue _queue;
-        public PushNotificationService(SubcriptionContext context, IPushNotificationQueue queue)
+        public PushNotificationService(SubcriptionContext context)
         {
             _context = context;
-            _queue = queue;
         }
 
         public async Task Subsctiption(PushSubscriptVM subscription)
@@ -60,12 +61,78 @@ namespace Push_Service.Services
             }
         }
 
-        public async Task DiscardSubscriptionAsync(string endpoint)
-        {
-            var data = await _context.Pushnotifications.FindAsync(endpoint);
-            _context.Pushnotifications.Remove(data);
 
-            await _context.SaveChangesAsync();
+        public async Task DiscardSubscription(string EndPoint)
+        {
+            try
+            {
+                var data = await _context.Pushnotifications.FirstOrDefaultAsync(e => e.EndPoint == EndPoint && e.IsDelete != true);
+                data.IsDelete = true;
+
+                _context.Pushnotifications.Update(data);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+
+        }
+
+        public async Task SentLogger(Pushnotification data, string datalog)
+        {
+            try
+            {
+                var dataobj = JsonConvert.DeserializeObject<content>(datalog);
+                var logData = new Log
+                {
+                    LogId = Guid.Parse(dataobj.UserId),
+                    SubId = data.SubId,
+                    SentDate = DateTime.Now,
+                    SentDetail = datalog,
+                    Status = "Sent",
+                };
+                await _context.Logs.AddAsync(logData);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateLogger(PushActionVM obj)
+        {
+            try
+            {
+                var data = await _context.Logs
+                    .Include(e => e.Sub).Where(w => w.Sub.IsDelete != true)
+                    .Where(w => w.Status == "Sent" || w.Status == "Received" && w.LogId.ToString() == obj.UserId)
+                    .ToListAsync();
+
+                if (data.Count > 0 && data != null)
+                {
+                    var tasks = data.Select(async item =>
+                    {
+                        item.ReceivedDate = DateTime.Now;
+                        item.Status = obj.Status;
+                        item.ReceivedDetail = JsonConvert.SerializeObject(obj);
+                        _context.Logs.Update(item);
+                        await _context.SaveChangesAsync();
+                    });
+
+                    await Task.WhenAll(tasks);
+
+                }
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

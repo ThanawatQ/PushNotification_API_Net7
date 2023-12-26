@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 
 namespace Push_Service.Model
 {
@@ -20,6 +21,7 @@ namespace Push_Service.Model
         public string Body { get; set; }
         public string Icon { get; set; }
         public string Type { get; set; }
+        public string? UserId { get; set; }
         public List<string> Url { get; set; }
         public List<Actions> actions { get; set; }
 
@@ -29,5 +31,6 @@ namespace Push_Service.Model
         public string action { get;set; }
         public string type { get; set; } = "button";
         public string title { get; set; }
+        public string url { get; set; }
     }
 }

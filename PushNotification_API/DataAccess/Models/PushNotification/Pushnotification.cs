@@ -5,7 +5,7 @@ namespace DataAccess.Models.PushNotification;
 
 public partial class Pushnotification
 {
-    public Guid SubId { get; set; } = Guid.NewGuid();
+    public Guid SubId { get; set; }
 
     public string? EndPoint { get; set; }
 
@@ -18,4 +18,6 @@ public partial class Pushnotification
     public string? Group { get; set; }
 
     public bool? IsDelete { get; set; }
+
+    public virtual ICollection<Log> Logs { get; set; } = new List<Log>();
 }
